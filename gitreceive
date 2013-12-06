@@ -6,8 +6,8 @@
 # MIT-licensed
 
 GITUSER=${GITUSER:-git}
-GITHOME="/var/lib/$GITUSER"
 GITGROUP=${GITGROUP:-users}
+GITHOME="${GITHOME:-/var/lib/$GITUSER}"
 BASEDIR=$(cd $(dirname $(readlink -f "$0" || echo "$0")) && pwd)
 SELF="$BASEDIR/$(basename "$0")"
 
@@ -22,12 +22,20 @@ case "$1" in
         mkdir -p "$GITHOME/.ssh"
         touch "$GITHOME/.ssh/authorized_keys"
         cat >"$GITHOME/receiver" <<'EOF'
-#!/bin/bash
+#! /bin/bash
 # For debugging only!
 echo "*** repository=$1 revision=$2 username=$3 fingerprint=$4"
 tar tvf -
 EOF
-        chmod +x "$GITHOME/receiver"
+        cat >"$GITHOME/gitreceive" <<EOF
+#! /bin/bash
+# Call global script with proper environment
+export GITUSER=$GITUSER
+export GITGROUP=$GITGROUP
+export GITHOME="GITHOME"
+"$SELF" "\$@"
+EOF
+        chmod +x "$GITHOME/receiver" "$GITHOME/gitreceive"
         chown -R $GITUSER.$GITGROUP "$GITHOME"
         echo "Created receiver script in '$GITHOME' for user '$GITUSER'."
         ;;
@@ -39,7 +47,7 @@ EOF
         FINGERPRINT=$(ssh-keygen -lf /dev/stdin <<<"$KEY" | awk '{print $2}')
         AUTHORIZED_KEYS="$GITHOME/.ssh/authorized_keys"
         # When this key is used, use the ssh 'forced command' feature to have 'gitreceive run' to run instead.
-        KEY_PREFIX="command=\"$SELF run $KEY_USER $FINGERPRINT\",no-agent-forwarding,no-pty,no-user-rc,no-X11-forwarding,no-port-forwarding"
+        KEY_PREFIX="command=\"$GITHOME/gitreceive run $KEY_USER $FINGERPRINT\",no-agent-forwarding,no-pty,no-user-rc,no-X11-forwarding,no-port-forwarding"
         echo "$KEY_PREFIX $KEY" >> "$AUTHORIZED_KEYS"
         chown $GITUSER.$GITGROUP "$AUTHORIZED_KEYS" "$GITHOME/.ssh/$KEY_USER.pub"
         echo $FINGERPRINT
