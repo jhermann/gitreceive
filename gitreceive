@@ -21,7 +21,7 @@ case "$1" in
         id $GITUSER
         mkdir -p "$GITHOME/.ssh"
         touch "$GITHOME/.ssh/authorized_keys"
-        cat >"$GITHOME/receiver" <<'EOF'
+        test -f "$GITHOME/receiver" || cat >"$GITHOME/receiver" <<'EOF'
 #! /bin/bash
 # For debugging only!
 echo "*** repository=$1 revision=$2 username=$3 fingerprint=$4"
