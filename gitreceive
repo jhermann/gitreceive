@@ -7,6 +7,7 @@
 
 GITUSER=${GITUSER:-git}
 GITHOME="/var/lib/$GITUSER"
+GITGROUP=${GITGROUP:-users}
 BASEDIR=$(cd $(dirname $(readlink -f "$0" || echo "$0")) && pwd)
 SELF="$BASEDIR/$(basename "$0")"
 
@@ -16,7 +17,8 @@ case "$1" in
     #
 
     init) # gitreceive init
-        useradd -d "$GITHOME" $GITUSER || true
+        useradd -d "$GITHOME" -g "$GITGROUP" -c "gitreceive account" --system $GITUSER || true
+        id $GITUSER
         mkdir -p "$GITHOME/.ssh"
         touch "$GITHOME/.ssh/authorized_keys"
         cat >"$GITHOME/receiver" <<'EOF'
@@ -26,7 +28,7 @@ echo "*** repository=$1 revision=$2 username=$3 fingerprint=$4"
 tar tvf -
 EOF
         chmod +x "$GITHOME/receiver"
-        chown -R $GITUSER "$GITHOME"
+        chown -R $GITUSER.$GITGROUP "$GITHOME"
         echo "Created receiver script in '$GITHOME' for user '$GITUSER'."
         ;;
 
