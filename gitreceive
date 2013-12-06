@@ -32,7 +32,7 @@ EOF
 # Call global script with proper environment
 export GITUSER=$GITUSER
 export GITGROUP=$GITGROUP
-export GITHOME="GITHOME"
+export GITHOME="$GITHOME"
 "$SELF" "\$@"
 EOF
         chmod +x "$GITHOME/receiver" "$GITHOME/gitreceive"
