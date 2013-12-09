@@ -61,6 +61,7 @@ EOF
         export RECEIVE_FINGERPRINT="${3:?Fingerprint is missing}"
         # ssh provides the original requested command in $SSH_ORIGINAL_COMMAND
         export RECEIVE_REPO="$(echo $SSH_ORIGINAL_COMMAND | awk '{print $2}' | perl -pe 's/(?<!\\)'\''//g' | sed 's/\\'\''/'\''/g')"
+        export RECEIVE_REPO="${RECEIVE_REPO#/}"
         REPO_PATH="$GITHOME/$RECEIVE_REPO"
         if [ ! -d "$REPO_PATH" ]; then
             mkdir -p "$REPO_PATH"
